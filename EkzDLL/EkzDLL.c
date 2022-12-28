@@ -155,7 +155,7 @@ __declspec(dllexport) U* SortUserArray(U* users, LPDWORD count, LPWSTR str)
 		istr = strstr(users[i].f, str);
 		if (istr != NULL)
 		{
-			for (DWORD j = 0; j < wcslen(users[i].o); j++)
+			for (DWORD j = 0; j < wcslen(users[i].f); j++)
 			{
 				UsersSort[indUser].f[j] = users[i].f[j];
 			}
@@ -174,6 +174,55 @@ __declspec(dllexport) U* SortUserArray(U* users, LPDWORD count, LPWSTR str)
 	*count = con + 1;
 	return UsersSort;
 }
+
+__declspec(dllexport) U* FilterUserArray(U* users, LPDWORD count, LPWSTR str)
+{
+	DWORD ind = 0, indUser = 0, con = *count, f = 0;
+	U* UsersFilt = calloc(con, sizeof(U));
+	UsersFilt[0].f[0] = (WCHAR)65279;
+	indUser++;
+	for (DWORD i = 0; i < *count; i++)//Переписал в лист
+	{
+		for (DWORD j = 0; j < wcslen(users[i].f); j++)
+		{
+			UsersFilt[indUser].f[j] = users[i].f[j];
+		}
+		for (DWORD j = 0; j < wcslen(users[i].i); j++)
+		{
+			UsersFilt[indUser].i[j] = users[i].i[j];
+		}
+		for (DWORD j = 0; j < wcslen(users[i].o); j++)
+		{
+			UsersFilt[indUser].o[j] = users[i].o[j];
+		}
+		UsersFilt[indUser].vozr = users[i].vozr;
+		indUser++;
+	}
+	for (int i = 0; i < *count - 1; i++) //Сортировка
+	{
+		for (int j = 0; j < *count - i - 1; j++)
+		{
+			int err;
+			char* res;
+			int res_len = WideCharToMultiByte(1251, 0, UsersFilt[j].f, -1, NULL, 0, NULL, NULL);
+			res = calloc(sizeof(char), res_len);
+			err = WideCharToMultiByte(1251, 0, UsersFilt[j].f, -1, res, res_len, NULL, NULL);
+			int err1;
+			char* res1;
+			int res_len1 = WideCharToMultiByte(1251, 0, UsersFilt[j+1].f, -1, NULL, 0, NULL, NULL);
+			res1 = calloc(sizeof(char), res_len1);
+			err1 = WideCharToMultiByte(1251, 0, UsersFilt[j+1].f, -1, res1, res_len1, NULL, NULL);
+			if (strcmp(res, res1)>0)
+			{
+				U user = UsersFilt[j];
+				UsersFilt[j] = UsersFilt[j + 1];
+				UsersFilt[j + 1] = user;
+			}
+		}
+	}
+	*count = con;
+	return UsersFilt;
+}
 #pragma endregion
 
 #pragma region ThirdMod
@@ -185,7 +234,7 @@ __declspec(dllexport) VOID AvgAge(U* users, LPDWORD count)
 	{
 		avg += users[i].vozr;
 	}
-	avg = avg / (d-1);
+	avg = avg / (d - 1);
 	char array[10];
 	sprintf(array, "%f", avg);
 	wchar_t wc[10];
@@ -203,13 +252,13 @@ __declspec(dllexport) VOID AvgAge(U* users, LPDWORD count)
 }
 __declspec(dllexport) VOID MaxLenF(U* users, LPDWORD count)
 {
-	DWORD MaxLen = 0,ind=0;
+	DWORD MaxLen = 0, ind = 0;
 	for (int i = 0; i < count; i++)
 	{
 		size_t len1 = strlen(users[i].f);
 		size_t len2 = strlen(users[i].i);
 		size_t len3 = strlen(users[i].o);
-		if ((len1+ len2+ len3) > MaxLen)
+		if ((len1 + len2 + len3) > MaxLen)
 		{
 			MaxLen = len1 + len2 + len3;
 			ind = i;
@@ -224,7 +273,7 @@ __declspec(dllexport) VOID MaxLenF(U* users, LPDWORD count)
 	int length2 = snprintf(NULL, 0, "%s", ptr);
 	char* Size2 = malloc(length2 + 1);
 	sprintf(Size2, "%s", ptr);
-	if (RegSetValueExW(hKey, L"MaxFIO", NULL, REG_SZ, ptr,60* sizeof(LPWSTR)) == ERROR_SUCCESS)
+	if (RegSetValueExW(hKey, L"MaxFIO", NULL, REG_SZ, ptr, 60 * sizeof(LPWSTR)) == ERROR_SUCCESS)
 	{
 	}
 }
@@ -234,7 +283,7 @@ __declspec(dllexport) VOID MaxLenF(U* users, LPDWORD count)
 __declspec(dllexport) VOID WriteToBuff(U* uses, LPDWORD count)
 {
 	int d = count;
-	wchar_t buff[3500]; 
+	wchar_t buff[3500];
 	int t = 0;
 	for (int i = 1; i < d; i++)
 	{
@@ -265,7 +314,7 @@ __declspec(dllexport) VOID WriteToBuff(U* uses, LPDWORD count)
 				buff[t] = uses[i].o[j];
 				t++;
 			}
-			
+
 		}
 		buff[t] = ';';
 		t++;
@@ -274,7 +323,7 @@ __declspec(dllexport) VOID WriteToBuff(U* uses, LPDWORD count)
 		sprintf(array, "%d", d);
 		for (int j = 0; j < 3; j++)
 		{
-			if (array[j]!= '\0')
+			if (array[j] != '\0')
 			{
 				buff[t] = array[j];
 				t++;
@@ -287,7 +336,7 @@ __declspec(dllexport) VOID WriteToBuff(U* uses, LPDWORD count)
 	}
 	buff[t] = '\0';
 	t++;
-	wchar_t *str = calloc(t,sizeof(wchar_t));
+	wchar_t* str = calloc(t, sizeof(wchar_t));
 	for (int i = 0; i < t; i++)
 	{
 		str[i] = buff[i];
